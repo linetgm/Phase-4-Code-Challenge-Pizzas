@@ -1,21 +1,48 @@
-from app import db, app
-from models import Restaurant, Pizza, RestaurantPizza
-from faker import Faker
-import random
+from random import choice, choices, randint
+import faker
 
-from random import randint
+from models import Restaurant,Restaurant_pizza,Pizza, db
+
+fake = faker.Faker()
+
+from app  import app
 
 with app.app_context():
-    db.create_all()
+    
+    Pizza.query.delete()
+    Restaurant_pizza.query.delete()
+    Restaurant.query.delete()
 
-    restaurant1 = Restaurant(name="Dominion Pizza", address="Good Italian, Ngong Road, 5th Avenue")
-    restaurant2 = Restaurant(name="Pizza Hut", address="Westgate Mall, Mwanzi Road, Nrb 100")
+    for n in range(30):
+        fake_name=  fake.name()
+        address= fake.address()
 
-    pizza1 = Pizza(name="Cheese", ingredients="Dough, Tomato Sauce, Cheese")
-    pizza2 = Pizza(name="Pepperoni", ingredients="Dough, Tomato Sauce, Cheese, Pepperoni")
+        
+        restaurant1 = Restaurant(name=fake_name ,address=address)
+        db.session.add(restaurant1)
+        db.session.commit()
 
-    restaurant_pizza1 = RestaurantPizza(price=5, pizza=pizza1, restaurant=restaurant1)
-    restaurant_pizza2 = RestaurantPizza(price=7, pizza=pizza2, restaurant=restaurant1)
+    
+    pizzas= ["Cheese Pizza", "Supreme Pizza", "Meat Pizza" , "Margherita Pizza", "BBQ Chicken Pizza", "Veggie Pizza", "Pepperoni Pizza"]
+    sample_ingredients= ["pepperoni" , "mushroom" ,"mozzarella", "onion", "bacon", "oregano", "olives",  "anchovies",  "ham"]
+    
 
-    db.session.add_all([restaurant1, restaurant2, pizza1, pizza2, restaurant_pizza1, restaurant_pizza2])
+    random_pizzas= []
+
+    for n in range(len(pizzas)):
+        other_pizza = choices(sample_ingredients , k=3)
+        random_ingedients= ','.join(str(ingredient) for ingredient in other_pizza)
+        random_pizza= Pizza(name= choice(pizzas), ingredients= random_ingedients)
+        random_pizzas.append(random_pizza)
+
+    print(random_pizzas)
+    db.session.add_all(random_pizzas)
     db.session.commit()
+
+    for record in range(15):
+        rnd_rest=choice([x.id for x in Restaurant.query.all()])
+        rnd_pizza= choice([p.id for p in  Pizza.query.all()])
+        db.session.add(Restaurant_pizza(restaurant_id=rnd_rest, pizza_id=rnd_pizza, price= randint(1,30)))
+        db.session.commit()
+
+    
